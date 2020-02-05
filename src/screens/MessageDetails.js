@@ -123,7 +123,6 @@ export class MessageDetailsView extends React.PureComponent {
 
 		const isEthereum =
 			NETWORK_LIST[sender.networkKey].protocol === NetworkProtocols.ETHEREUM;
-		const prefix = !isEthereum && NETWORK_LIST[sender.networkKey].prefix;
 
 		return (
 			<ScrollView
@@ -134,11 +133,11 @@ export class MessageDetailsView extends React.PureComponent {
 				<Text style={styles.topTitle}>Sign Message</Text>
 				<Text style={styles.title}>From Account</Text>
 				<CompatibleCard account={sender} accountsStore={accountsStore} />
-				{!isEthereum && prehash && prefix ? (
+				{!isEthereum && prehash ? (
 					<PayloadDetailsCard
 						description="You are about to confirm sending the following extrinsic. We will sign the hash of the payload as it is oversized."
 						payload={prehash}
-						prefix={prefix}
+						networkKey={sender.networkKey}
 					/>
 				) : null}
 				<MessageDetailsCard

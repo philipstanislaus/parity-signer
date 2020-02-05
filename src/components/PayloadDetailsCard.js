@@ -28,51 +28,34 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, ViewPropTypes } from 'react-native';
 
 import colors from '../colors';
-import { SUBSTRATE_NETWORK_LIST, SubstrateNetworkKeys } from '../constants';
+import { SUBSTRATE_NETWORK_LIST } from '../constants';
 import { shortString } from '../util/strings';
 import fontStyles from '../fontStyles';
 import { alertDecodeError } from '../util/alertUtils';
-import { kusamaMetadata, substrateDevMetadata } from '../util/networkMetadata';
+import { getMetadata } from '../util/identitiesUtils';
 
 const registry = new TypeRegistry();
 
 export default class PayloadDetailsCard extends React.PureComponent {
 	static propTypes = {
 		description: PropTypes.string,
+		networkKey: PropTypes.string.isRequired,
 		payload: PropTypes.object,
-		prefix: PropTypes.number.isRequired,
 		signature: PropTypes.string,
 		style: ViewPropTypes.style
 	};
 
 	constructor(props) {
 		super(props);
-		// KUSAMA and KUSAMA_DEV have the same metadata and Defaults values
-		const isKusama =
-			this.props.prefix ===
-				SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].prefix ||
-			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA_DEV].prefix;
-		const isSubstrateDev =
-			this.props.prefix ===
-			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].prefix;
+		const { networkKey } = this.props;
+		const networkMetadataRaw = getMetadata(networkKey);
+		const metadata = new Metadata(registry, networkMetadataRaw);
+		registry.setMetadata(metadata);
+		formatBalance.setDefaults({
+			decimals: SUBSTRATE_NETWORK_LIST[networkKey].decimals,
+			unit: SUBSTRATE_NETWORK_LIST[networkKey].unit
+		});
 
-		let metadata;
-		if (isKusama) {
-			metadata = new Metadata(registry, kusamaMetadata);
-			registry.setMetadata(metadata);
-			formatBalance.setDefaults({
-				decimals: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].decimals,
-				unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].unit
-			});
-		} else if (__DEV__ && isSubstrateDev) {
-			metadata = new Metadata(registry, substrateDevMetadata);
-			registry.setMetadata(metadata);
-			formatBalance.setDefaults({
-				decimals:
-					SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].decimals,
-				unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].unit
-			});
-		}
 		this.state = {
 			fallback: !metadata
 		};
@@ -80,7 +63,8 @@ export default class PayloadDetailsCard extends React.PureComponent {
 
 	render() {
 		const { fallback } = this.state;
-		const { description, payload, prefix, signature, style } = this.props;
+		const { description, payload, networkKey, signature, style } = this.props;
+		const prefix = SUBSTRATE_NETWORK_LIST[networkKey].prefix;
 
 		return (
 			<View style={[styles.body, style]}>

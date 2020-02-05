@@ -72,9 +72,8 @@ function SignedTx({ scanner, accounts }) {
 					<PayloadDetailsCard
 						style={{ marginBottom: 20 }}
 						description={TX_DETAILS_MSG}
-						protocol={NETWORK_LIST[sender.networkKey].protocol}
-						prefix={NETWORK_LIST[sender.networkKey].prefix}
 						signature={data}
+						networkKey={sender.networkKey}
 					/>
 				)}
 			</View>

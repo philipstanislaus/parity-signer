@@ -19,12 +19,18 @@
 import {
 	NETWORK_LIST,
 	SUBSTRATE_NETWORK_LIST,
+	SubstrateNetworkKeys,
 	UnknownNetworkKeys
 } from '../constants';
 import { pathsRegex } from './regex';
 import { decryptData } from './native';
 import { parseSURI } from './suri';
 import { generateAccountId } from './account';
+import {
+	kusamaMetadata,
+	substrateDevMetadata,
+	westendMetadata
+} from './networkMetadata';
 
 //walk around to fix the regular expression support for positive look behind;
 export const removeSlash = str => str.replace(/\//g, '');
@@ -247,4 +253,19 @@ export const groupPaths = paths => {
 		return groupedPath;
 	}, []);
 	return groupedPaths.sort((a, b) => a.paths.length - b.paths.length);
+};
+
+export const getMetadata = networkKey => {
+	switch (networkKey) {
+		case SubstrateNetworkKeys.KUSAMA:
+		case SubstrateNetworkKeys.KUSAMA_CC2:
+		case SubstrateNetworkKeys.KUSAMA_DEV:
+			return kusamaMetadata;
+		case SubstrateNetworkKeys.WESTEND:
+			return westendMetadata;
+		case SubstrateNetworkKeys.SUBSTRATE_DEV:
+			return substrateDevMetadata;
+		default:
+			return kusamaMetadata;
+	}
 };

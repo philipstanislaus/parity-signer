@@ -127,7 +127,6 @@ export class TxDetailsView extends React.PureComponent {
 
 		const isEthereum =
 			NETWORK_LIST[sender.networkKey].protocol === NetworkProtocols.ETHEREUM;
-		const prefix = !isEthereum && NETWORK_LIST[sender.networkKey].prefix;
 
 		return (
 			<View style={styles.body}>
@@ -170,7 +169,7 @@ export class TxDetailsView extends React.PureComponent {
 							<PayloadDetailsCard
 								style={{ marginBottom: 20 }}
 								payload={prehash}
-								prefix={prefix}
+								networkKey={sender.networkKey}
 							/>
 						)}
 					</View>
