@@ -29,11 +29,10 @@ import { StyleSheet, Text, View, ViewPropTypes } from 'react-native';
 
 import colors from '../colors';
 import { SUBSTRATE_NETWORK_LIST, SubstrateNetworkKeys } from '../constants';
-import kusamaMetadata from '../util/static-kusama';
-import substrateDevMetadata from '../util/static-substrate';
 import { shortString } from '../util/strings';
 import fontStyles from '../fontStyles';
 import { alertDecodeError } from '../util/alertUtils';
+import { kusamaMetadata, substrateDevMetadata } from '../util/networkMetadata';
 
 const registry = new TypeRegistry();
 
