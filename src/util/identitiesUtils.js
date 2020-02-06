@@ -128,6 +128,22 @@ export const getPathsWithSubstrateNetwork = (paths, networkKey) => {
 	);
 };
 
+const getNetworkKeyByPathId = pathId => {
+	const networkKeyIndex = Object.values(NETWORK_LIST).findIndex(
+		networkParams => networkParams.pathId === pathId
+	);
+	if (networkKeyIndex !== -1) return Object.keys(NETWORK_LIST)[networkKeyIndex];
+	return UnknownNetworkKeys.UNKNOWN;
+};
+
+export const getNetworkKey = (path, identity) => {
+	if (identity.meta.has(path)) {
+		const networkPathId = identity.meta.get(path).networkPathId;
+		if (networkPathId) return getNetworkKeyByPathId(networkPathId);
+	}
+	return getNetworkKeyByPath(path);
+};
+
 export const getNetworkKeyByPath = path => {
 	if (!isSubstratePath(path) && NETWORK_LIST.hasOwnProperty(path)) {
 		return path;
@@ -135,12 +151,7 @@ export const getNetworkKeyByPath = path => {
 	const pathId = extractPathId(path);
 	if (!pathId) return UnknownNetworkKeys.UNKNOWN;
 
-	const networkKeyIndex = Object.values(NETWORK_LIST).findIndex(
-		networkParams => networkParams.pathId === pathId
-	);
-	if (networkKeyIndex !== -1) return Object.keys(NETWORK_LIST)[networkKeyIndex];
-
-	return UnknownNetworkKeys.UNKNOWN;
+	return getNetworkKeyByPathId(pathId);
 };
 
 export const getIdentityFromSender = (sender, identities) =>
@@ -155,15 +166,6 @@ export const getAddressWithPath = (path, identity) => {
 		: address;
 };
 
-export const getRootPathMeta = (identity, networkKey) => {
-	const rootPathId = `//${NETWORK_LIST[networkKey].pathId}`;
-	if (identity.meta.has(rootPathId)) {
-		return identity.meta.get(rootPathId);
-	} else {
-		return null;
-	}
-};
-
 export const unlockIdentitySeed = async (pin, identity) => {
 	const { encryptedSeed } = identity;
 	const seed = await decryptData(encryptedSeed, pin);
@@ -174,7 +176,6 @@ export const unlockIdentitySeed = async (pin, identity) => {
 export const getExistedNetworkKeys = identity => {
 	const pathsList = Array.from(identity.addresses.values());
 	const networkKeysSet = pathsList.reduce((networksSet, path) => {
-		if (path === '') return networksSet;
 		let networkKey;
 		if (isSubstratePath(path)) {
 			networkKey = getNetworkKeyByPath(path);
@@ -205,9 +206,8 @@ export const getPathName = (path, lookUpIdentity) => {
 	) {
 		return lookUpIdentity.meta.get(path).name;
 	}
-	if (!isSubstratePath(path)) {
-		return 'No name';
-	}
+	if (!isSubstratePath(path)) return 'No name';
+	if (path === '') return 'Identity root';
 	return extractSubPathName(path);
 };
 
@@ -232,27 +232,37 @@ export const groupPaths = paths => {
 
 	const groupedPaths = paths.reduce((groupedPath, path) => {
 		if (path === '') {
+			groupedPath.push({ paths: [''], title: 'Identity root' });
 			return groupedPath;
 		}
+
 		const rootPath = path.match(pathsRegex.firstPath)[0];
 
-		const isUnknownRootPath = Object.values(NETWORK_LIST).every(
-			v => `//${v.pathId}` !== rootPath
+		const networkParams = Object.values(NETWORK_LIST).find(
+			v => `//${v.pathId}` === rootPath
 		);
-		if (isUnknownRootPath) {
+		if (networkParams === undefined) {
 			insertPathIntoGroup(path, path, groupedPath);
 			return groupedPath;
 		}
 
 		const isRootPath = path === rootPath;
-		if (isRootPath) return groupedPath;
+		if (isRootPath) {
+			groupedPath.push({ paths: [path], title: `${networkParams.title} root` });
+			return groupedPath;
+		}
 
 		const subPath = path.slice(rootPath.length);
 		insertPathIntoGroup(subPath, path, groupedPath);
 
 		return groupedPath;
 	}, []);
-	return groupedPaths.sort((a, b) => a.paths.length - b.paths.length);
+	return groupedPaths.sort((a, b) => {
+		if (a.paths.length === 1 && b.paths.length === 1) {
+			return a.paths[0].length - b.paths[0].length;
+		}
+		return a.paths.length - b.paths.length;
+	});
 };
 
 export const getMetadata = networkKey => {
