@@ -23,6 +23,7 @@ import { Platform, StyleSheet, Text, View } from 'react-native';
 import TextInput from '../components/TextInput';
 import ButtonMainAction from '../components/ButtonMainAction';
 import {
+	getNetworkKey,
 	getNetworkKeyByPath,
 	validateDerivedPath
 } from '../util/identitiesUtils';
@@ -45,9 +46,18 @@ function PathDerivation({ accounts, navigation }) {
 	const [keyPairsName, setKeyPairsName] = useState('');
 	const [isPathValid, setIsPathValid] = useState(true);
 	const [modalVisible, setModalVisible] = useState(false);
-	const [customNetworkKey, setCustomNetworkKey] = useState(defaultNetworkKey);
 	const pathNameInput = useRef(null);
 	const parentPath = navigation.getParam('parentPath');
+	const [customNetworkKey, setCustomNetworkKey] = useState(() => {
+		const parentNetworkKey = getNetworkKey(
+			parentPath,
+			accounts.state.currentIdentity
+		);
+		return parentNetworkKey === UnknownNetworkKeys.UNKNOWN
+			? defaultNetworkKey
+			: parentNetworkKey;
+	});
+	console.log('customNetworkKey is', customNetworkKey);
 	const completePath = `${parentPath}${derivationPath}`;
 	const pathIndicatedNetworkKey = useMemo(
 		() => getNetworkKeyByPath(completePath),
