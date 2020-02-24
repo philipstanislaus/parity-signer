@@ -22,9 +22,7 @@ import { GenericExtrinsicPayload } from '@polkadot/types';
 import { NETWORK_LIST } from 'constants/networkSpecs';
 import testIDs from 'e2e/testIDs';
 import { FoundAccount } from 'types/identityTypes';
-import {
-	isEthereumNetworkParams,
-} from 'types/networkSpecsTypes';
+import { isEthereumNetworkParams } from 'types/networkSpecsTypes';
 import { NavigationAccountScannerProps, NavigationProps } from 'types/props';
 import colors from 'styles/colors';
 import Background from 'components/Background';
