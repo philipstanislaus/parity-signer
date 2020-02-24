@@ -28,6 +28,8 @@ import QrView from '../components/QrView';
 import {
 	getAddressWithPath,
 	getNetworkKey,
+	getNetworkKeyByPath,
+	getPathName,
 	getPathsWithSubstrateNetwork,
 	isSubstratePath
 } from '../util/identitiesUtils';
@@ -44,6 +46,7 @@ import UnknownAccountWarning from '../components/UnknownAccountWarning';
 export function PathDetailsView({ accounts, navigation, path, networkKey }) {
 	const { currentIdentity } = accounts.state;
 	const address = getAddressWithPath(path, currentIdentity);
+	const accountName = getPathName(path, currentIdentity);
 	if (!address) return null;
 	const isUnknownNetwork = networkKey === UnknownNetworkKeys.UNKNOWN;
 	const formattedNetworkKey = isUnknownNetwork ? defaultNetworkKey : networkKey;
@@ -59,11 +62,15 @@ export function PathDetailsView({ accounts, navigation, path, networkKey }) {
 					await unlockSeedPhrase(navigation);
 					const deleteSucceed = await accounts.deletePath(path);
 					const paths = Array.from(accounts.state.currentIdentity.meta.keys());
-					const listedPaths = getPathsWithSubstrateNetwork(paths, networkKey);
+					const pathIndicatedNetworkKey = getNetworkKeyByPath(path);
+					const listedPaths = getPathsWithSubstrateNetwork(
+						paths,
+						pathIndicatedNetworkKey
+					);
 					const hasOtherPaths = listedPaths.length > 0;
 					if (deleteSucceed) {
 						isSubstratePath(path) && hasOtherPaths
-							? navigateToPathsList(navigation, networkKey)
+							? navigateToPathsList(navigation, pathIndicatedNetworkKey)
 							: navigation.navigate('AccountNetworkChooser');
 					} else {
 						alertPathDeletionError();
@@ -104,7 +111,7 @@ export function PathDetailsView({ accounts, navigation, path, networkKey }) {
 			</View>
 			<ScrollView>
 				<PathCard identity={currentIdentity} path={path} />
-				<QrView data={accountId} />
+				<QrView data={`${accountId}:${accountName}`} />
 				{isUnknownNetwork && <UnknownAccountWarning isPath />}
 			</ScrollView>
 		</View>
