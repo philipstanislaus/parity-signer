@@ -19,7 +19,7 @@ import { Alert, Button, StyleSheet, Text, View } from 'react-native';
 import { RNCamera } from 'react-native-camera';
 import { Subscribe } from 'unstated';
 
-import { createMockSignRequest } from 'e2e/mock';
+import { onMockBarCodeRead } from 'e2e/injections';
 import { NavigationProps, NavigationScannerProps } from 'types/props';
 import colors from 'styles/colors';
 import fonts from 'styles/fonts';
@@ -80,6 +80,7 @@ export default class Scanner extends React.PureComponent<
 								if (scannerStore.isBusy() || !this.state.enableScan) {
 									return;
 								}
+								console.log('txrequest data is: ', txRequestData);
 								try {
 									if (isAddressString(txRequestData.data)) {
 										return this.showErrorMessage(
@@ -148,8 +149,8 @@ function QrScannerView({
 	scannerStore,
 	...props
 }: ViewProps): React.ReactElement {
-	if (global.inTest) {
-		props.onBarCodeRead(createMockSignRequest());
+	if (global.inTest && global.scanRequest !== undefined) {
+		onMockBarCodeRead(global.scanRequest, props.onBarCodeRead);
 	}
 
 	useEffect((): (() => void) => {
