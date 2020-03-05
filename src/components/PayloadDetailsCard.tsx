@@ -34,6 +34,7 @@ import {
 } from 'constants/networkSpecs';
 import kusamaMetadata from 'constants/static-kusama';
 import substrateDevMetadata from 'constants/static-substrate';
+import centrifugeAmberMetadata from 'constants/static-centrifuge-amber';
 import { shortString } from 'utils/strings';
 import fontStyles from 'styles/fontStyles';
 import { alertDecodeError } from 'utils/alertUtils';
@@ -72,6 +73,13 @@ export default class PayloadDetailsCard extends React.PureComponent<
 			formatBalance.setDefaults({
 				decimals: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].decimals,
 				unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].unit
+			});
+		} else if (isKusama) {
+			metadata = new Metadata(registry, centrifugeAmberMetadata);
+			registry.setMetadata(metadata);
+			formatBalance.setDefaults({
+				decimals: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER].decimals,
+				unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER].unit
 			});
 		} else if (__DEV__ && isSubstrateDev) {
 			metadata = new Metadata(registry, substrateDevMetadata);
