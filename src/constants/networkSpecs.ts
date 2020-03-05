@@ -124,15 +124,17 @@ const substrateNetworkBase: {
 		color: '#fcc367',
 		decimals: 18,
 		genesisHash: SubstrateNetworkKeys.CENTRIFUGE_AMBER,
+		logo: require('res/img/logos/centrifuge-chain.png'),
 		pathId: 'centrifuge_amber',
 		prefix: 42,
 		title: 'Centrifuge Amber Testnet',
 		unit: 'ARAD'
 	},
- 	[SubstrateNetworkKeys.CENTRIFUGE]: {
+	[SubstrateNetworkKeys.CENTRIFUGE]: {
 		color: '#fcc367',
 		decimals: 18,
-		genesisHash: SubstrateNetworkKeys.CENTRIFUGE_AMBER,
+		genesisHash: SubstrateNetworkKeys.CENTRIFUGE,
+		logo: require('res/img/logos/centrifuge-chain.png'),
 		pathId: 'centrifuge',
 		prefix: 36,
 		title: 'Centrifuge Mainnet',
