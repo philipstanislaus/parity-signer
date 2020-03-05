@@ -78,7 +78,9 @@ export default class PayloadDetailsCard extends React.PureComponent<
 			metadata = new Metadata(registry, centrifugeAmberMetadata);
 			registry.setMetadata(metadata);
 			formatBalance.setDefaults({
-				decimals: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER].decimals,
+				decimals:
+					SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER]
+						.decimals,
 				unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER].unit
 			});
 		} else if (__DEV__ && isSubstrateDev) {
