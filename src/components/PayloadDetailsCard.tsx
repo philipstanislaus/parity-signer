@@ -35,6 +35,7 @@ import {
 import kusamaMetadata from 'constants/static-kusama';
 import substrateDevMetadata from 'constants/static-substrate';
 import centrifugeAmberMetadata from 'constants/static-centrifuge-amber';
+import centrifugePreMetadata from 'constants/static-centrifuge-pre';
 import { shortString } from 'utils/strings';
 import fontStyles from 'styles/fontStyles';
 import { alertDecodeError } from 'utils/alertUtils';
@@ -58,23 +59,35 @@ export default class PayloadDetailsCard extends React.PureComponent<
 	constructor(props: Props) {
 		super(props);
 		// KUSAMA and KUSAMA_DEV have the same metadata and Defaults values
-		const isKusama =
-			this.props.prefix ===
-				SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].prefix ||
-			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA_DEV].prefix;
-		const isSubstrateDev =
-			this.props.prefix ===
-			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].prefix;
+		// const isKusama =
+		// 	this.props.prefix ===
+		// 		SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].prefix ||
+		// 	SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA_DEV].prefix;
+		// const isSubstrateDev =
+		// 	this.props.prefix ===
+		// 	SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].prefix;
+		// TODO: uncommented the above, it only filters by network prefix and would clash with those:
+		const isCentrifugePre = this.props.prefix === SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_PRE].prefix
+		const isCentrifugeAmber = this.props.prefix === SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER].prefix
 
 		let metadata;
-		if (isKusama) {
-			metadata = new Metadata(registry, kusamaMetadata);
+		// if (isKusama) {
+		// 	metadata = new Metadata(registry, kusamaMetadata);
+		// 	registry.setMetadata(metadata);
+		// 	formatBalance.setDefaults({
+		// 		decimals: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].decimals,
+		// 		unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].unit
+		// 	});
+		if (isCentrifugePre) {
+			metadata = new Metadata(registry, centrifugePreMetadata);
 			registry.setMetadata(metadata);
 			formatBalance.setDefaults({
-				decimals: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].decimals,
-				unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].unit
+				decimals:
+					SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_PRE]
+						.decimals,
+				unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_PRE].unit
 			});
-		} else if (isKusama) {
+		} else if (isCentrifugeAmber) {
 			metadata = new Metadata(registry, centrifugeAmberMetadata);
 			registry.setMetadata(metadata);
 			formatBalance.setDefaults({
@@ -83,14 +96,14 @@ export default class PayloadDetailsCard extends React.PureComponent<
 						.decimals,
 				unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER].unit
 			});
-		} else if (__DEV__ && isSubstrateDev) {
-			metadata = new Metadata(registry, substrateDevMetadata);
-			registry.setMetadata(metadata);
-			formatBalance.setDefaults({
-				decimals:
-					SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].decimals,
-				unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].unit
-			});
+		// } else if (__DEV__ && isSubstrateDev) {
+		// 	metadata = new Metadata(registry, substrateDevMetadata);
+		// 	registry.setMetadata(metadata);
+		// 	formatBalance.setDefaults({
+		// 		decimals:
+		// 			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].decimals,
+		// 		unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].unit
+		// 	});
 		}
 		this.state = {
 			fallback: !metadata

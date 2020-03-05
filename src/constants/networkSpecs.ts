@@ -61,7 +61,9 @@ export const SubstrateNetworkKeys: {
 		'0x0000000000000000000000000000000000000000000000000000000000000001', // Needs to be replaced after mainnet genesis hash is finalized
 	CENTRIFUGE_AMBER:
 		'0x14ad1761c377ea2aac9a1f7edc648c8b7b64f2f7a1667330f4b5eeec65ab8a3f', // https://polkascan.io/pre/centrifuge-amber/block/0
-	KUSAMA: '0xb0a8d493285c2df73290dfb7e61f870f17b41801197a149ca93654499ea3dafe', // https://polkascan.io/pre/kusama-cc3/block/0
+		KUSAMA: '0xb0a8d493285c2df73290dfb7e61f870f17b41801197a149ca93654499ea3dafe', // https://polkascan.io/pre/kusama-cc3/block/0
+	CENTRIFUGE_PRE:
+		'0x6e74a7c807a43e81e6671b5098c9906d2bc8d7df8dfc15ad19c0846ffeab170a',
 	KUSAMA_CC2:
 		'0xe3777fa922cafbff200cadeaea1a76bd7898ad5b89f7848999058b50e715f636',
 	KUSAMA_DEV:
@@ -131,6 +133,16 @@ const substrateNetworkBase: {
 		prefix: 42,
 		title: 'Centrifuge Amber Testnet',
 		unit: 'ARAD'
+	},
+	[SubstrateNetworkKeys.CENTRIFUGE_PRE]: {
+		color: '#fcc367',
+		decimals: 18,
+		genesisHash: SubstrateNetworkKeys.CENTRIFUGE_PRE,
+		logo: require('res/img/logos/centrifuge-chain.png'),
+		pathId: 'centrifuge_pre',
+		prefix: 36,
+		title: 'Centrifuge Mainnet Preview',
+		unit: 'RAD'
 	},
 	[SubstrateNetworkKeys.CENTRIFUGE]: {
 		color: '#fcc367',
