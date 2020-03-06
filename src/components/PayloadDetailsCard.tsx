@@ -32,8 +32,8 @@ import {
 	SUBSTRATE_NETWORK_LIST,
 	SubstrateNetworkKeys
 } from 'constants/networkSpecs';
-import kusamaMetadata from 'constants/static-kusama';
-import substrateDevMetadata from 'constants/static-substrate';
+// import kusamaMetadata from 'constants/static-kusama';
+// import substrateDevMetadata from 'constants/static-substrate';
 import centrifugeAmberMetadata from 'constants/static-centrifuge-amber';
 import centrifugePreMetadata from 'constants/static-centrifuge-pre';
 import { shortString } from 'utils/strings';
@@ -67,8 +67,12 @@ export default class PayloadDetailsCard extends React.PureComponent<
 		// 	this.props.prefix ===
 		// 	SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].prefix;
 		// TODO: uncommented the above, it only filters by network prefix and would clash with those:
-		const isCentrifugePre = this.props.prefix === SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_PRE].prefix
-		const isCentrifugeAmber = this.props.prefix === SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER].prefix
+		const isCentrifugePre =
+			this.props.prefix ===
+			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_PRE].prefix;
+		const isCentrifugeAmber =
+			this.props.prefix ===
+			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER].prefix;
 
 		let metadata;
 		// if (isKusama) {
@@ -83,8 +87,7 @@ export default class PayloadDetailsCard extends React.PureComponent<
 			registry.setMetadata(metadata);
 			formatBalance.setDefaults({
 				decimals:
-					SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_PRE]
-						.decimals,
+					SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_PRE].decimals,
 				unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_PRE].unit
 			});
 		} else if (isCentrifugeAmber) {
@@ -96,14 +99,14 @@ export default class PayloadDetailsCard extends React.PureComponent<
 						.decimals,
 				unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER].unit
 			});
-		// } else if (__DEV__ && isSubstrateDev) {
-		// 	metadata = new Metadata(registry, substrateDevMetadata);
-		// 	registry.setMetadata(metadata);
-		// 	formatBalance.setDefaults({
-		// 		decimals:
-		// 			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].decimals,
-		// 		unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].unit
-		// 	});
+			// } else if (__DEV__ && isSubstrateDev) {
+			// 	metadata = new Metadata(registry, substrateDevMetadata);
+			// 	registry.setMetadata(metadata);
+			// 	formatBalance.setDefaults({
+			// 		decimals:
+			// 			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].decimals,
+			// 		unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].unit
+			// 	});
 		}
 		this.state = {
 			fallback: !metadata
