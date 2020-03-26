@@ -41,8 +41,8 @@ import {
 	substrateDevMetadata,
 	westendMetadata
 } from 'constants/networkMetadata';
-import centrifugeAmberMetadata from 'constants/static-centrifuge-amber';
-import centrifugePreMetadata from 'constants/static-centrifuge-pre';
+import centrifugeAmberMetadata from 'constants/centrifugeAmberMetadata';
+import centrifugePreMetadata from 'constants/centrifugePreMetadata';
 
 //walk around to fix the regular expression support for positive look behind;
 export const removeSlash = (str: string): string => str.replace(/\//g, '');
