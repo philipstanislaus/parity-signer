@@ -15,10 +15,11 @@
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
 import React, { useEffect } from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { SafeAreaScrollViewContainer } from 'components/SafeAreaContainer';
+import testIDs from 'e2e/testIDs';
 import { NavigationScannerProps } from 'types/props';
-import colors from 'styles/colors';
 import QrView from 'components/QrView';
 import { withScannerStore } from 'utils/HOC';
 import fontStyles from 'styles/fontStyles';
@@ -26,42 +27,38 @@ import MessageDetailsCard from 'components/MessageDetailsCard';
 
 function SignedMessage({
 	scannerStore
-}: NavigationScannerProps<{}>): React.ReactElement {
+}: NavigationScannerProps<'SignedMessage'>): React.ReactElement {
 	const data = scannerStore.getSignedTxData();
 	const isHash = scannerStore.getIsHash();
 	const message = scannerStore.getMessage();
 
 	useEffect(
 		(): (() => void) =>
-			function(): void {
+			function (): void {
 				scannerStore.cleanup();
 			},
 		[scannerStore]
 	);
 
 	return (
-		<ScrollView style={styles.body}>
+		<SafeAreaScrollViewContainer>
 			<Text style={styles.topTitle}>Signed Message</Text>
-			<QrView data={data} />
+			<View testID={testIDs.SignedMessage.qrView}>
+				<QrView data={data} />
+			</View>
 			<MessageDetailsCard
 				isHash={isHash}
 				message={message ?? ''}
 				data={data}
 				style={styles.messageDetail}
 			/>
-		</ScrollView>
+		</SafeAreaScrollViewContainer>
 	);
 }
 
 export default withScannerStore(SignedMessage);
 
 const styles = StyleSheet.create({
-	body: {
-		backgroundColor: colors.bg,
-		flex: 1,
-		flexDirection: 'column',
-		overflow: 'hidden'
-	},
 	messageDetail: {
 		paddingHorizontal: 20
 	},

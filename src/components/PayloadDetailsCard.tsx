@@ -14,12 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
-import {
-	TypeRegistry,
-	Metadata,
-	GenericExtrinsicPayload
-} from '@polkadot/types';
-import Call from '@polkadot/types/primitive/Generic/Call';
+import { GenericExtrinsicPayload } from '@polkadot/types';
+import Call from '@polkadot/types/generic/Call';
 import { formatBalance } from '@polkadot/util';
 import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
 import React, { useEffect, useState } from 'react';
@@ -27,95 +23,257 @@ import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { AnyU8a, IExtrinsicEra, IMethod } from '@polkadot/types/types';
 import { ExtrinsicEra } from '@polkadot/types/interfaces';
 
+import RegistriesStore from 'stores/RegistriesStore';
 import colors from 'styles/colors';
-import {
-	SUBSTRATE_NETWORK_LIST,
-	SubstrateNetworkKeys
-} from 'constants/networkSpecs';
-// import kusamaMetadata from 'constants/static-kusama';
-// import substrateDevMetadata from 'constants/static-substrate';
-import centrifugeAmberMetadata from 'constants/static-centrifuge-amber';
-import centrifugePreMetadata from 'constants/static-centrifuge-pre';
+import { SUBSTRATE_NETWORK_LIST } from 'constants/networkSpecs';
+import { withRegistriesStore } from 'utils/HOC';
 import { shortString } from 'utils/strings';
 import fontStyles from 'styles/fontStyles';
 import { alertDecodeError } from 'utils/alertUtils';
 
-const registry = new TypeRegistry();
+const recodeAddress = (encodedAddress: string, prefix: number): string =>
+	encodeAddress(decodeAddress(encodedAddress), prefix);
 
-interface Props {
+type ExtrinsicPartProps = {
+	fallback?: string;
+	label: string;
+	networkKey: string;
+	registriesStore: RegistriesStore;
+	value: AnyU8a | IMethod | IExtrinsicEra;
+};
+
+const ExtrinsicPart = withRegistriesStore<ExtrinsicPartProps>(
+	({
+		fallback,
+		label,
+		networkKey,
+		registriesStore,
+		value
+	}: ExtrinsicPartProps): React.ReactElement => {
+		const [period, setPeriod] = useState<string>();
+		const [phase, setPhase] = useState<string>();
+		const [formattedCallArgs, setFormattedCallArgs] = useState<any>();
+		const [tip, setTip] = useState<string>();
+		const [useFallback, setUseFallBack] = useState(false);
+		const prefix = SUBSTRATE_NETWORK_LIST[networkKey].prefix;
+
+		useEffect(() => {
+			if (label === 'Method' && !fallback) {
+				try {
+					const registry = registriesStore.get(networkKey);
+					const call = registry.createType('Call', value);
+
+					const methodArgs = {};
+
+					function formatArgs(
+						callInstance: Call,
+						callMethodArgs: any,
+						depth: number
+					): void {
+						const { args, meta, methodName, sectionName } = callInstance;
+						const paramArgKvArray = [];
+						if (!meta.args.length) {
+							const sectionMethod = `${sectionName}.${methodName}`;
+							callMethodArgs[sectionMethod] = null;
+							return;
+						}
+
+						for (let i = 0; i < meta.args.length; i++) {
+							let argument;
+							if (
+								args[i].toRawType() === 'Balance' ||
+								args[i].toRawType() === 'Compact<Balance>'
+							) {
+								argument = formatBalance(args[i].toString());
+							} else if (
+								args[i].toRawType() === 'Address' ||
+								args[i].toRawType() === 'AccountId'
+							) {
+								// encode Address and AccountId to the appropriate prefix
+								argument = recodeAddress(args[i].toString(), prefix);
+							} else if (args[i] instanceof Call) {
+								argument = formatArgs(args[i] as Call, callMethodArgs, depth++); // go deeper into the nested calls
+							} else if (
+								args[i].toRawType() === 'Vec<AccountId>' ||
+								args[i].toRawType() === 'Vec<Address>'
+							) {
+								argument = (args[i] as any).map((v: any) =>
+									recodeAddress(v.toString(), prefix)
+								);
+							} else {
+								argument = args[i].toString();
+							}
+							const param = meta.args[i].name.toString();
+							const sectionMethod = `${sectionName}.${methodName}`;
+							paramArgKvArray.push([param, argument]);
+							callMethodArgs[sectionMethod] = paramArgKvArray;
+						}
+					}
+
+					formatArgs(call, methodArgs, 0);
+					setFormattedCallArgs(methodArgs);
+				} catch (e) {
+					alertDecodeError();
+					setUseFallBack(true);
+				}
+			}
+
+			if (label === 'Era' && !fallback) {
+				if ((value as ExtrinsicEra).isMortalEra) {
+					setPeriod((value as ExtrinsicEra).asMortalEra.period.toString());
+					setPhase((value as ExtrinsicEra).asMortalEra.phase.toString());
+				}
+			}
+
+			if (label === 'Tip' && !fallback) {
+				setTip(formatBalance(value as any));
+			}
+		}, [fallback, label, prefix, value, networkKey, registriesStore]);
+
+		const renderEraDetails = (): React.ReactElement => {
+			if (period && phase) {
+				return (
+					<View style={styles.era}>
+						<Text style={{ ...styles.subLabel, flex: 1 }}>phase: {phase} </Text>
+						<Text style={{ ...styles.subLabel, flex: 1 }}>
+							period: {period}
+						</Text>
+					</View>
+				);
+			} else {
+				return (
+					<View
+						style={{
+							display: 'flex',
+							flexDirection: 'row',
+							flexWrap: 'wrap'
+						}}
+					>
+						<Text style={{ ...styles.subLabel, flex: 1 }}>Immortal Era</Text>
+						<Text style={{ ...styles.secondaryText, flex: 3 }}>
+							{value.toString()}
+						</Text>
+					</View>
+				);
+			}
+		};
+
+		type ArgsList = Array<[string, any]>;
+		type MethodCall = [string, ArgsList];
+		type FormattedArgs = Array<MethodCall>;
+
+		const renderMethodDetails = (): React.ReactNode => {
+			if (formattedCallArgs) {
+				const formattedArgs: FormattedArgs = Object.entries(formattedCallArgs);
+
+				// HACK: if there's a sudo method just put it to the front. Better way would be to order by depth but currently this is only relevant for a single extrinsic, so seems like overkill.
+				for (let i = 1; i < formattedArgs.length; i++) {
+					if (formattedArgs[i][0].includes('sudo')) {
+						const tmp = formattedArgs[i];
+						formattedArgs.splice(i, 1);
+						formattedArgs.unshift(tmp);
+						break;
+					}
+				}
+
+				return formattedArgs.map((entry, index) => {
+					const sectionMethod = entry[0];
+					const paramArgs: Array<[any, any]> = entry[1];
+
+					return (
+						<View key={index} style={styles.callDetails}>
+							<Text style={styles.subLabel}>
+								Call <Text style={styles.titleText}>{sectionMethod}</Text> with
+								the following arguments:
+							</Text>
+							{paramArgs ? (
+								paramArgs.map(([param, arg]) => (
+									<View key={param} style={styles.callDetails}>
+										<Text style={styles.titleText}>
+											{' { '}
+											{param}:{' '}
+											{arg && arg.length > 50
+												? shortString(arg)
+												: arg instanceof Array
+												? arg.join(', ')
+												: arg}{' '}
+											{'}'}
+										</Text>
+									</View>
+								))
+							) : (
+								<Text style={styles.secondaryText}>
+									This method takes 0 arguments.
+								</Text>
+							)}
+						</View>
+					);
+				});
+			}
+		};
+
+		const renderTipDetails = (): React.ReactElement => {
+			return (
+				<View style={{ display: 'flex', flexDirection: 'column' }}>
+					<Text style={styles.secondaryText}>{tip}</Text>
+				</View>
+			);
+		};
+
+		return (
+			<View style={[{ alignItems: 'baseline', justifyContent: 'flex-start' }]}>
+				<View style={{ marginBottom: 12, width: '100%' }}>
+					<Text style={styles.label}>{label}</Text>
+					{label === 'Method' && !useFallback ? (
+						renderMethodDetails()
+					) : label === 'Era' ? (
+						renderEraDetails()
+					) : label === 'Tip' ? (
+						renderTipDetails()
+					) : (
+						<Text style={styles.secondaryText}>
+							{useFallback ? value.toString() : value}
+						</Text>
+					)}
+				</View>
+			</View>
+		);
+	}
+);
+
+interface PayloadDetailsCardProps {
 	description?: string;
 	payload?: GenericExtrinsicPayload;
-	prefix: number;
 	signature?: string;
 	style?: ViewStyle;
+	networkKey: string;
 }
 
 export default class PayloadDetailsCard extends React.PureComponent<
-	Props,
+	PayloadDetailsCardProps,
 	{
 		fallback: boolean;
 	}
 > {
-	constructor(props: Props) {
+	constructor(props: PayloadDetailsCardProps) {
 		super(props);
-		// KUSAMA and KUSAMA_DEV have the same metadata and Defaults values
-		// const isKusama =
-		// 	this.props.prefix ===
-		// 		SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].prefix ||
-		// 	SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA_DEV].prefix;
-		// const isSubstrateDev =
-		// 	this.props.prefix ===
-		// 	SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].prefix;
-		// TODO: uncommented the above, it only filters by network prefix and would clash with those:
-		const isCentrifugePre =
-			this.props.prefix ===
-			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_PRE].prefix;
-		const isCentrifugeAmber =
-			this.props.prefix ===
-			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER].prefix;
+		const { networkKey } = this.props;
+		formatBalance.setDefaults({
+			decimals: SUBSTRATE_NETWORK_LIST[networkKey].decimals,
+			unit: SUBSTRATE_NETWORK_LIST[networkKey].unit
+		});
 
-		let metadata;
-		// if (isKusama) {
-		// 	metadata = new Metadata(registry, kusamaMetadata);
-		// 	registry.setMetadata(metadata);
-		// 	formatBalance.setDefaults({
-		// 		decimals: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].decimals,
-		// 		unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.KUSAMA].unit
-		// 	});
-		if (isCentrifugePre) {
-			metadata = new Metadata(registry, centrifugePreMetadata);
-			registry.setMetadata(metadata);
-			formatBalance.setDefaults({
-				decimals:
-					SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_PRE].decimals,
-				unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_PRE].unit
-			});
-		} else if (isCentrifugeAmber) {
-			metadata = new Metadata(registry, centrifugeAmberMetadata);
-			registry.setMetadata(metadata);
-			formatBalance.setDefaults({
-				decimals:
-					SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER]
-						.decimals,
-				unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER].unit
-			});
-			// } else if (__DEV__ && isSubstrateDev) {
-			// 	metadata = new Metadata(registry, substrateDevMetadata);
-			// 	registry.setMetadata(metadata);
-			// 	formatBalance.setDefaults({
-			// 		decimals:
-			// 			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].decimals,
-			// 		unit: SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.SUBSTRATE_DEV].unit
-			// 	});
-		}
+		const isKnownNetworkKey = SUBSTRATE_NETWORK_LIST.hasOwnProperty(networkKey);
 		this.state = {
-			fallback: !metadata
+			fallback: !isKnownNetworkKey
 		};
 	}
 
 	render(): React.ReactElement {
 		const { fallback } = this.state;
-		const { description, payload, prefix, signature, style } = this.props;
+		const { description, payload, networkKey, signature, style } = this.props;
+
+		console.log('payload is', payload);
 
 		return (
 			<View style={[styles.body, style]}>
@@ -124,32 +282,32 @@ export default class PayloadDetailsCard extends React.PureComponent<
 					<View style={styles.extrinsicContainer}>
 						<ExtrinsicPart
 							label="Method"
-							prefix={prefix}
+							networkKey={networkKey}
 							value={fallback ? payload.method.toString() : payload.method}
 						/>
 						<ExtrinsicPart
 							label="Block Hash"
-							prefix={prefix}
+							networkKey={networkKey}
 							value={payload.blockHash.toString()}
 						/>
 						<ExtrinsicPart
 							label="Era"
-							prefix={prefix}
+							networkKey={networkKey}
 							value={fallback ? payload.era.toString() : payload.era}
 						/>
 						<ExtrinsicPart
 							label="Nonce"
-							prefix={prefix}
+							networkKey={networkKey}
 							value={payload.nonce.toString()}
 						/>
 						<ExtrinsicPart
 							label="Tip"
-							prefix={prefix}
+							networkKey={networkKey}
 							value={payload.tip.toString()}
 						/>
 						<ExtrinsicPart
 							label="Genesis Hash"
-							prefix={prefix}
+							networkKey={networkKey}
 							value={payload.genesisHash.toString()}
 						/>
 					</View>
@@ -163,207 +321,6 @@ export default class PayloadDetailsCard extends React.PureComponent<
 			</View>
 		);
 	}
-}
-
-const recodeAddress = (encodedAddress: string, prefix: number): string =>
-	encodeAddress(decodeAddress(encodedAddress), prefix);
-
-function ExtrinsicPart({
-	label,
-	fallback,
-	prefix,
-	value
-}: {
-	label: string;
-	prefix: number;
-	value: AnyU8a | IMethod | IExtrinsicEra;
-	fallback?: string;
-}): React.ReactElement {
-	const [period, setPeriod] = useState();
-	const [phase, setPhase] = useState();
-	const [formattedCallArgs, setFormattedCallArgs] = useState();
-	const [tip, setTip] = useState();
-	const [useFallback, setUseFallBack] = useState(false);
-
-	useEffect(() => {
-		if (label === 'Method' && !fallback) {
-			try {
-				const call = new Call(registry, value);
-
-				const methodArgs = {};
-
-				// todo: clean this up
-				function formatArgs(
-					callInstance: Call,
-					callMethodArgs: any,
-					depth: number
-				): void {
-					const { args, meta, methodName, sectionName } = callInstance;
-					const paramArgKvArray = [];
-					if (!meta.args.length) {
-						const sectionMethod = `${sectionName}.${methodName}`;
-						callMethodArgs[sectionMethod] = null;
-						return;
-					}
-
-					for (let i = 0; i < meta.args.length; i++) {
-						let argument;
-						if (
-							args[i].toRawType() === 'Balance' ||
-							args[i].toRawType() === 'Compact<Balance>'
-						) {
-							argument = formatBalance(args[i].toString());
-						} else if (
-							args[i].toRawType() === 'Address' ||
-							args[i].toRawType() === 'AccountId'
-						) {
-							// encode Address and AccountId to the appropriate prefix
-							argument = recodeAddress(args[i].toString(), prefix);
-						} else if (args[i] instanceof Call) {
-							argument = formatArgs(args[i] as Call, callMethodArgs, depth++); // go deeper into the nested calls
-						} else if (
-							args[i].toRawType() === 'Vec<AccountId>' ||
-							args[i].toRawType() === 'Vec<Address>'
-						) {
-							argument = (args[i] as any).map((v: any) =>
-								recodeAddress(v.toString(), prefix)
-							);
-						} else {
-							argument = args[i].toString();
-						}
-						const param = meta.args[i].name.toString();
-						const sectionMethod = `${sectionName}.${methodName}`;
-						paramArgKvArray.push([param, argument]);
-						callMethodArgs[sectionMethod] = paramArgKvArray;
-					}
-				}
-
-				formatArgs(call, methodArgs, 0);
-				setFormattedCallArgs(methodArgs);
-			} catch (e) {
-				alertDecodeError();
-				setUseFallBack(true);
-			}
-		}
-
-		if (label === 'Era' && !fallback) {
-			if ((value as ExtrinsicEra).isMortalEra) {
-				setPeriod((value as ExtrinsicEra).asMortalEra.period.toString());
-				setPhase((value as ExtrinsicEra).asMortalEra.phase.toString());
-			}
-		}
-
-		if (label === 'Tip' && !fallback) {
-			setTip(formatBalance(value as any));
-		}
-	}, [fallback, label, prefix, value]);
-
-	const renderEraDetails = (): React.ReactElement => {
-		if (period && phase) {
-			return (
-				<View style={styles.era}>
-					<Text style={{ ...styles.subLabel, flex: 1 }}>phase: {phase} </Text>
-					<Text style={{ ...styles.subLabel, flex: 1 }}>period: {period}</Text>
-				</View>
-			);
-		} else {
-			return (
-				<View
-					style={{
-						display: 'flex',
-						flexDirection: 'row',
-						flexWrap: 'wrap'
-					}}
-				>
-					<Text style={{ ...styles.subLabel, flex: 1 }}>Immortal Era</Text>
-					<Text style={{ ...styles.secondaryText, flex: 3 }}>
-						{value.toString()}
-					</Text>
-				</View>
-			);
-		}
-	};
-
-	type ArgsList = Array<[string, any]>;
-	type MethodCall = [string, ArgsList];
-	type FormattedArgs = Array<MethodCall>;
-
-	const renderMethodDetails = (): React.ReactNode => {
-		if (formattedCallArgs) {
-			const formattedArgs: FormattedArgs = Object.entries(formattedCallArgs);
-
-			// HACK: if there's a sudo method just put it to the front. Better way would be to order by depth but currently this is only relevant for a single extrinsic, so seems like overkill.
-			for (let i = 1; i < formattedArgs.length; i++) {
-				if (formattedArgs[i][0].includes('sudo')) {
-					const tmp = formattedArgs[i];
-					formattedArgs.splice(i, 1);
-					formattedArgs.unshift(tmp);
-					break;
-				}
-			}
-
-			return formattedArgs.map((entry, index) => {
-				const sectionMethod = entry[0];
-				const paramArgs: Array<[any, any]> = entry[1];
-
-				return (
-					<View key={index} style={styles.callDetails}>
-						<Text style={styles.subLabel}>
-							Call <Text style={styles.titleText}>{sectionMethod}</Text> with
-							the following arguments:
-						</Text>
-						{paramArgs ? (
-							paramArgs.map(([param, arg]) => (
-								<View key={param} style={styles.callDetails}>
-									<Text style={styles.titleText}>
-										{' { '}
-										{param}:{' '}
-										{arg && arg.length > 50
-											? shortString(arg)
-											: arg instanceof Array
-											? arg.join(', ')
-											: arg}{' '}
-										{'}'}
-									</Text>
-								</View>
-							))
-						) : (
-							<Text style={styles.secondaryText}>
-								This method takes 0 arguments.
-							</Text>
-						)}
-					</View>
-				);
-			});
-		}
-	};
-
-	const renderTipDetails = (): React.ReactElement => {
-		return (
-			<View style={{ display: 'flex', flexDirection: 'column' }}>
-				<Text style={styles.secondaryText}>{tip}</Text>
-			</View>
-		);
-	};
-
-	return (
-		<View style={[{ alignItems: 'baseline', justifyContent: 'flex-start' }]}>
-			<View style={{ marginBottom: 12, width: '100%' }}>
-				<Text style={styles.label}>{label}</Text>
-				{label === 'Method' && !useFallback ? (
-					renderMethodDetails()
-				) : label === 'Era' ? (
-					renderEraDetails()
-				) : label === 'Tip' ? (
-					renderTipDetails()
-				) : (
-					<Text style={styles.secondaryText}>
-						{useFallback ? value.toString() : value}
-					</Text>
-				)}
-			</View>
-		</View>
-	);
 }
 
 const styles = StyleSheet.create({

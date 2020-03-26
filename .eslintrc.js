@@ -3,7 +3,6 @@ const commonRules = {
   "comma-dangle": ["error", "never"],
   "object-curly-spacing": ["error", "always"],
   "quotes": ["error", "single",  { "avoidEscape": true }],
-  "no-unused-vars": ["error", { "args": "none" }],
   "react-native/no-inline-styles": "off",
   "sort-keys": ["error", "asc", {"caseSensitive": true, "natural": false, "minKeys": 2}],
   "import/order": ["error", {
@@ -22,7 +21,7 @@ module.exports = {
   globals: { inTest: "writable" },
   overrides: [
     {
-      files: ["e2e/*.spec.js", "e2e/init.js", "e2e/e2eUtils.js"],
+      files: ["e2e/*.spec.js", "e2e/init.js", "e2e/utils.js"],
       rules: {
         "no-undef": "off"
       }
@@ -54,6 +53,7 @@ module.exports = {
         "@typescript-eslint/no-use-before-define": ["error", { "variables": false }], // enable defining variables after react component;
         "@typescript-eslint/no-non-null-assertion": 0,
         '@typescript-eslint/camelcase': 0,
+        '@typescript-eslint/ban-ts-ignore': 0,
         "no-void": "off",
         "react-hooks/rules-of-hooks": "error",
         "react-hooks/exhaustive-deps": "warn",
@@ -83,5 +83,8 @@ module.exports = {
       "version": "16.9.0", // React version, default to the latest React stable release
     },
   },
-  rules: commonRules
+  rules: {
+    ...commonRules,
+    "no-unused-vars": ["error", { "args": "none" }],
+  }
 };

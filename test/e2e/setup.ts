@@ -14,11 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
-import { init, cleanup } from 'detox';
+import { init, cleanup, device } from 'detox';
 import adapter from 'detox/runners/jest/adapter';
 import specReporter from 'detox/runners/jest/specReporter';
 
-import { detox as config } from '../package.json';
+import { detox as config } from '../../package.json';
 
 // Set the default timeout
 jest.setTimeout(120000);
@@ -30,6 +30,10 @@ jasmine.getEnv().addReporter(specReporter);
 
 beforeAll(async () => {
 	await init(config, { launchApp: false });
+	if (device.getPlatform() === 'ios') {
+		await device.clearKeychain();
+	}
+	await device.launchApp({ permissions: { camera: 'YES' } });
 });
 
 beforeEach(async () => {

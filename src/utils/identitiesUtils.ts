@@ -22,6 +22,7 @@ import { generateAccountId } from './account';
 import {
 	NETWORK_LIST,
 	SUBSTRATE_NETWORK_LIST,
+	SubstrateNetworkKeys,
 	UnknownNetworkKeys
 } from 'constants/networkSpecs';
 import {
@@ -34,6 +35,14 @@ import {
 	SerializedIdentity,
 	UnlockedAccount
 } from 'types/identityTypes';
+import {
+	defaultMetaData,
+	kusamaMetadata,
+	substrateDevMetadata,
+	westendMetadata
+} from 'constants/networkMetadata';
+import centrifugeAmberMetadata from 'constants/static-centrifuge-amber';
+import centrifugePreMetadata from 'constants/static-centrifuge-pre';
 
 //walk around to fix the regular expression support for positive look behind;
 export const removeSlash = (str: string): string => str.replace(/\//g, '');
@@ -207,8 +216,9 @@ export const getIdentityFromSender = (
 
 export const getAddressWithPath = (
 	path: string,
-	identity: Identity
+	identity: Identity | null
 ): string => {
+	if (identity == null) return '';
 	const pathMeta = identity.meta.get(path);
 	if (!pathMeta) return '';
 	const { address } = pathMeta;
@@ -255,7 +265,10 @@ export const getIdentityName = (
 	return `Identity_${identityIndex}`;
 };
 
-export const getPathName = (path: string, lookUpIdentity: Identity): string => {
+export const getPathName = (
+	path: string,
+	lookUpIdentity: Identity | null
+): string => {
 	if (
 		lookUpIdentity &&
 		lookUpIdentity.meta.has(path) &&
@@ -332,4 +345,25 @@ export const groupPaths = (paths: string[]): PathGroup[] => {
 		}
 		return a.paths.length - b.paths.length;
 	});
+};
+
+export const getMetadata = (networkKey: string): string => {
+	switch (networkKey) {
+		case SubstrateNetworkKeys.CENTRIFUGE:
+			return centrifugePreMetadata;
+		case SubstrateNetworkKeys.CENTRIFUGE_PRE:
+			return centrifugePreMetadata;
+		case SubstrateNetworkKeys.CENTRIFUGE_AMBER:
+			return centrifugeAmberMetadata;
+		case SubstrateNetworkKeys.KUSAMA:
+		case SubstrateNetworkKeys.KUSAMA_CC2:
+		case SubstrateNetworkKeys.KUSAMA_DEV:
+			return kusamaMetadata;
+		case SubstrateNetworkKeys.WESTEND:
+			return westendMetadata;
+		case SubstrateNetworkKeys.SUBSTRATE_DEV:
+			return substrateDevMetadata;
+		default:
+			return defaultMetaData;
+	}
 };

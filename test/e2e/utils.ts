@@ -14,10 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity.  If not, see <http://www.gnu.org/licenses/>.
 
-import { expect, element, by } from 'detox';
+import { expect, element, by, device } from 'detox';
 
 import testIDs from './testIDs';
-const { IdentityPin } = testIDs;
+const { IdentityPin, AccountNetworkChooser, PathDetail, PathsList } = testIDs;
+
+export const pinCode = '000000';
+const substrateNetworkButtonIndex =
+	AccountNetworkChooser.networkButton + 'kusama';
 
 export const testTap = async (buttonId: string): Promise<Detox.Actions<any>> =>
 	await element(by.id(buttonId)).tap();
@@ -34,10 +38,13 @@ export const testNotExist = async (componentId: string): Promise<void> =>
 export const testNotVisible = async (componentId: string): Promise<void> =>
 	await expect(element(by.id(componentId))).toBeNotVisible();
 
-export const tapBack = async (): Promise<Detox.Actions<any>> =>
-	await element(by.id(testIDs.Header.headerBackButton))
-		.atIndex(0)
-		.tap();
+export const tapBack = async (): Promise<void> => {
+	if (device.getPlatform() === 'ios') {
+		await element(by.id(testIDs.Header.headerBackButton)).atIndex(0).tap();
+	} else {
+		await device.pressBack();
+	}
+};
 
 export const testInput = async (
 	inputId: string,
@@ -53,9 +60,7 @@ export const testInputWithDone = async (
 ): Promise<void> => {
 	await element(by.id(inputId)).typeText(inputText);
 	if (device.getPlatform() === 'ios') {
-		await element(by.label('Done'))
-			.atIndex(0)
-			.tap();
+		await element(by.label('Done')).atIndex(0).tap();
 	} else {
 		await element(by.id(inputId)).tapReturnKey();
 	}
@@ -72,6 +77,30 @@ export const testScrollAndTap = async (
 	await testTap(buttonId);
 };
 
-export const testUnlockPin = async (pinCode: string): Promise<void> => {
-	await testInputWithDone(IdentityPin.unlockPinInput, pinCode);
+export const testUnlockPin = async (inputPin: string): Promise<void> => {
+	await testInputWithDone(IdentityPin.unlockPinInput, inputPin);
+};
+
+export const testSetUpDefaultPath = async (): Promise<void> => {
+	await testInput(IdentityPin.setPin, pinCode);
+	await testInputWithDone(IdentityPin.confirmPin, pinCode);
+	await testVisible(AccountNetworkChooser.chooserScreen);
+	await testScrollAndTap(
+		substrateNetworkButtonIndex,
+		testIDs.AccountNetworkChooser.chooserScreen
+	);
+	await testUnlockPin(pinCode);
+	await testVisible(PathDetail.screen);
+	await tapBack();
+	await testExist(PathsList.screen);
+};
+
+export const launchWithScanRequest = async (
+	txRequest: number
+): Promise<void> => {
+	await device.launchApp({
+		launchArgs: { scanRequest: txRequest.toString() },
+		newInstance: true,
+		permissions: { camera: 'YES' }
+	});
 };

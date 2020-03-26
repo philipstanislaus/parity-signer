@@ -20,8 +20,11 @@
 
 import React, { FunctionComponent, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { withNavigation } from 'react-navigation';
 
+import {
+	SafeAreaScrollViewContainer,
+	SafeAreaViewContainer
+} from 'components/SafeAreaContainer';
 import {
 	NETWORK_LIST,
 	UnknownNetworkKeys,
@@ -31,6 +34,7 @@ import {
 import testIDs from 'e2e/testIDs';
 import colors from 'styles/colors';
 import Button from 'components/Button';
+import { NavigationAccountProps } from 'types/props';
 import {
 	navigateToPathsList,
 	unlockSeedPhrase,
@@ -50,9 +54,8 @@ import {
 	NetworkParams,
 	SubstrateNetworkParams,
 	isSubstrateNetworkParams,
-	EthereumNetworkParams
+	isEthereumNetworkParams
 } from 'types/networkSpecsTypes';
-import { NavigationAccountProps } from 'types/props';
 
 const excludedNetworks = [
 	UnknownNetworkKeys.UNKNOWN,
@@ -64,10 +67,11 @@ if (!__DEV__) {
 }
 
 function AccountNetworkChooser({
+	accounts,
 	navigation,
-	accounts
-}: NavigationAccountProps<{ isNew: boolean }>): React.ReactElement {
-	const isNew = navigation.getParam('isNew', false);
+	route
+}: NavigationAccountProps<'AccountNetworkChooser'>): React.ReactElement {
+	const isNew = route.params?.isNew ?? false;
 	const [shouldShowMoreNetworks, setShouldShowMoreNetworks] = useState(false);
 	const { identities, currentIdentity, loaded } = accounts.state;
 	const hasLegacyAccount = accounts.getAccounts().size !== 0;
@@ -83,16 +87,15 @@ function AccountNetworkChooser({
 					? testIDs.AccountNetworkChooser.recoverButton
 					: testIDs.AccountNetworkChooser.createButton
 			}
-			onPress={(): boolean => navigation.navigate('IdentityNew', { isRecover })}
+			onPress={(): void => navigation.navigate('IdentityNew', { isRecover })}
 		>
 			{text}
 		</Text>
 	);
 
 	const showOnboardingMessage = (): React.ReactElement => (
-		<ScrollView
+		<SafeAreaScrollViewContainer
 			testID={testIDs.AccountNetworkChooser.noAccountScreen}
-			style={styles.body}
 			contentContainerStyle={styles.scrollContent}
 		>
 			<View style={styles.onboardingWrapper}>
@@ -103,31 +106,38 @@ function AccountNetworkChooser({
 				{hasLegacyAccount && (
 					<Button
 						title="Show Legacy Accounts"
-						onPress={(): boolean => navigation.navigate('LegacyAccountList')}
+						onPress={(): void => navigation.navigate('LegacyAccountList')}
 						small={true}
 						onlyText={true}
 						style={{ marginLeft: 0 }}
 					/>
 				)}
 			</View>
-		</ScrollView>
+		</SafeAreaScrollViewContainer>
 	);
 
 	const showNoCurrentIdentityMessage = (): React.ReactElement => (
-		<ScrollView
-			style={styles.body}
-			contentContainerStyle={styles.scrollContent}
-		>
+		<SafeAreaScrollViewContainer contentContainerStyle={styles.scrollContent}>
 			<View style={styles.onboardingWrapper}>
 				<Text style={fontStyles.quote}>
 					Select one of your identity to get started.
 				</Text>
 			</View>
-		</ScrollView>
+		</SafeAreaScrollViewContainer>
 	);
 
-	const sortNetworkKeys = ([, networkParams]: [any, NetworkParams]): number =>
-		networkParams.protocol !== NetworkProtocols.SUBSTRATE ? 1 : -1;
+	const sortNetworkKeys = (
+		[, params1]: [any, NetworkParams],
+		[, params2]: [any, NetworkParams]
+	): number => {
+		if (params1.order > params2.order) {
+			return 1;
+		} else if (params1.order < params2.order) {
+			return -1;
+		} else {
+			return 0;
+		}
+	};
 
 	const filterNetworkKeys = ([networkKey]: [string, any]): boolean => {
 		const shouldExclude = excludedNetworks.includes(networkKey);
@@ -176,7 +186,7 @@ function AccountNetworkChooser({
 	const renderCustomPathCard = (): React.ReactElement => (
 		<NetworkCard
 			isAdd={true}
-			onPress={(): boolean =>
+			onPress={(): void =>
 				navigation.navigate('PathDerivation', { parentPath: '' })
 			}
 			testID={testIDs.AccountNetworkChooser.addCustomNetworkButton}
@@ -247,7 +257,7 @@ function AccountNetworkChooser({
 		}
 	};
 
-	if (!loaded) return <ScrollView style={styles.body} />;
+	if (!loaded) return <SafeAreaViewContainer />;
 	if (identities.length === 0) return showOnboardingMessage();
 	if (!currentIdentity) return showNoCurrentIdentityMessage();
 
@@ -255,38 +265,39 @@ function AccountNetworkChooser({
 	networkList.sort(sortNetworkKeys);
 
 	return (
-		<View style={styles.body}>
+		<SafeAreaViewContainer>
 			{renderScreenHeading()}
-			<ScrollView testID={testIDs.AccountNetworkChooser.chooserScreen}>
-				{networkList.map(([networkKey, networkParams]) => (
-					<NetworkCard
-						key={networkKey}
-						testID={
-							testIDs.AccountNetworkChooser.networkButton +
-								(networkParams as SubstrateNetworkParams).pathId ||
-							(networkParams as EthereumNetworkParams).ethereumChainId
-						}
-						networkKey={networkKey}
-						onPress={(): Promise<void> =>
-							onNetworkChosen(networkKey, networkParams)
-						}
-						title={networkParams.title}
-					/>
-				))}
+			<ScrollView
+				bounces={false}
+				testID={testIDs.AccountNetworkChooser.chooserScreen}
+			>
+				{networkList.map(([networkKey, networkParams]) => {
+					const networkIndexSuffix = isEthereumNetworkParams(networkParams)
+						? networkParams.ethereumChainId
+						: networkParams.pathId;
+					return (
+						<NetworkCard
+							key={networkKey}
+							testID={
+								testIDs.AccountNetworkChooser.networkButton + networkIndexSuffix
+							}
+							networkKey={networkKey}
+							onPress={(): Promise<void> =>
+								onNetworkChosen(networkKey, networkParams)
+							}
+							title={networkParams.title}
+						/>
+					);
+				})}
 				{renderAddButton()}
 			</ScrollView>
-		</View>
+		</SafeAreaViewContainer>
 	);
 }
 
-export default withAccountStore(withNavigation(AccountNetworkChooser));
+export default withAccountStore(AccountNetworkChooser);
 
 const styles = StyleSheet.create({
-	body: {
-		backgroundColor: colors.bg,
-		flex: 1,
-		flexDirection: 'column'
-	},
 	onboardingWrapper: {
 		alignItems: 'center',
 		flexDirection: 'row',
