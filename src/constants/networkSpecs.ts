@@ -120,7 +120,7 @@ const substrateNetworkBase: {
 		genesisHash: SubstrateNetworkKeys.CENTRIFUGE_PRE,
 		logo: require('res/img/logos/centrifuge-chain.png'),
 		order: -90,
-		pathId: 'centrifuge_pre',
+		pathId: 'centrifuge',
 		prefix: 36,
 		title: 'Centrifuge Mainnet Preview',
 		unit: 'RAD'
