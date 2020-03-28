@@ -58,11 +58,9 @@ export const SubstrateNetworkKeys: {
 	[key: string]: string;
 } = Object.freeze({
 	CENTRIFUGE:
-		'0x0000000000000000000000000000000000000000000000000000000000000001', // Needs to be replaced after mainnet genesis hash is finalized
+		'0x9caf5780c396ac623a42cdb48ee4a40cea9b7e187ed4b3506f8af444c258fb50', // https://portal.chain.centrifuge.io/#/explorer/query/0 , TODO: Needs to be replaced after mainnet genesis hash is finalized
 	CENTRIFUGE_AMBER:
 		'0x092af6e7d25178ebab1677d15f66e37b30392b44ef442f728a53dd1bf48ec110', // https://portal.chain.centrifuge.io/#/explorer/query/0
-	CENTRIFUGE_PRE:
-		'0x9caf5780c396ac623a42cdb48ee4a40cea9b7e187ed4b3506f8af444c258fb50', // https://portal.chain.centrifuge.io/#/explorer/query/0
 	EDGEWARE:
 		'0x742a2ca70c2fda6cee4f8df98d64c4c670a052d9568058982dad9d5a7a135c5b', // https://polkascan.io/pre/edgeware/block/0
 	KULUPU: '0x37e1f8125397a98630013a4dff89b54cb758ff8eed894419e65a6dcf27a6fb8a',
@@ -113,17 +111,6 @@ const substrateNetworkBase: {
 		prefix: 42,
 		title: 'Centrifuge Amber Testnet',
 		unit: 'ARAD'
-	},
-	[SubstrateNetworkKeys.CENTRIFUGE_PRE]: {
-		color: '#fcc367',
-		decimals: 18,
-		genesisHash: SubstrateNetworkKeys.CENTRIFUGE_PRE,
-		logo: require('res/img/logos/centrifuge-chain.png'),
-		order: -90,
-		pathId: 'centrifuge',
-		prefix: 36,
-		title: 'Centrifuge Mainnet Preview',
-		unit: 'RAD'
 	},
 	[SubstrateNetworkKeys.EDGEWARE]: {
 		color: '#0a95df',

@@ -350,9 +350,7 @@ export const groupPaths = (paths: string[]): PathGroup[] => {
 export const getMetadata = (networkKey: string): string => {
 	switch (networkKey) {
 		case SubstrateNetworkKeys.CENTRIFUGE:
-			return centrifugePreMetadata;
-		case SubstrateNetworkKeys.CENTRIFUGE_PRE:
-			return centrifugePreMetadata;
+			return centrifugePreMetadata; // TODO: needs to be updated with mainnet metadata
 		case SubstrateNetworkKeys.CENTRIFUGE_AMBER:
 			return centrifugeAmberMetadata;
 		case SubstrateNetworkKeys.KUSAMA:
