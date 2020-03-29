@@ -109,7 +109,7 @@ const substrateNetworkBase: {
 		order: -80,
 		pathId: 'centrifuge_amber',
 		prefix: 42,
-		title: 'Centrifuge Amber Testnet',
+		title: 'Centrifuge Testnet Amber',
 		unit: 'ARAD'
 	},
 	[SubstrateNetworkKeys.EDGEWARE]: {
