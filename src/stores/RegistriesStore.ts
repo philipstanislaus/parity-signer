@@ -19,7 +19,10 @@ import { TYPES_SPEC } from '@polkadot/types/known/overrides';
 import { RegistryTypes } from '@polkadot/types/types';
 import { Container } from 'unstated';
 
-import { SUBSTRATE_NETWORK_LIST } from 'constants/networkSpecs';
+import {
+	SUBSTRATE_NETWORK_LIST,
+	SubstrateNetworkKeys
+} from 'constants/networkSpecs';
 import { getMetadata } from 'utils/identitiesUtils';
 
 type RegistriesStoreState = {
@@ -30,6 +33,35 @@ type RegistriesStoreState = {
 function getLatestVersionOverrideTypes(
 	networkPathId: string
 ): undefined | RegistryTypes {
+	if (
+		networkPathId ===
+			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE]?.pathId ||
+		networkPathId ===
+			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER]?.pathId
+	) {
+		return {
+			Address: 'AccountId',
+			AnchorData: {
+				anchoredBlock: 'u64',
+				docRoot: 'H256',
+				id: 'H256'
+			},
+			Fee: {
+				key: 'Hash',
+				price: 'Balance'
+			},
+			LookupSource: 'AccountId',
+			PreCommitData: {
+				expirationBlock: 'u64',
+				identity: 'H256',
+				signingRoot: 'H256'
+			},
+			Proof: {
+				leafHash: 'H256',
+				sortedHashes: 'H256'
+			}
+		};
+	}
 	if (!TYPES_SPEC.hasOwnProperty(networkPathId)) return undefined;
 	const latestVersionNumber = TYPES_SPEC[networkPathId].length - 1;
 	return TYPES_SPEC[networkPathId][latestVersionNumber].types;
