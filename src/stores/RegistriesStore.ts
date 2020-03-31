@@ -19,7 +19,10 @@ import { TYPES_SPEC } from '@polkadot/types/known/overrides';
 import { RegistryTypes } from '@polkadot/types/types';
 import { Container } from 'unstated';
 
-import { SUBSTRATE_NETWORK_LIST, SubstrateNetworkKeys } from 'constants/networkSpecs';
+import {
+	SUBSTRATE_NETWORK_LIST,
+	SubstrateNetworkKeys
+} from 'constants/networkSpecs';
 import { getMetadata } from 'utils/identitiesUtils';
 
 type RegistriesStoreState = {
@@ -30,9 +33,14 @@ type RegistriesStoreState = {
 function getLatestVersionOverrideTypes(
 	networkPathId: string
 ): undefined | RegistryTypes {
-	if (networkPathId === SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE]?.pathId ||
-		networkPathId === SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER]?.pathId) {
+	if (
+		networkPathId ===
+			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE]?.pathId ||
+		networkPathId ===
+			SUBSTRATE_NETWORK_LIST[SubstrateNetworkKeys.CENTRIFUGE_AMBER]?.pathId
+	) {
 		return {
+			/* eslint-disable sort-keys */
 			AnchorData: {
 				id: 'H256',
 				docRoot: 'H256',
@@ -54,7 +62,8 @@ function getLatestVersionOverrideTypes(
 			// Overwrites to Substrate types
 			Address: 'AccountId',
 			LookupSource: 'AccountId'
-		}
+			/* eslint-enable sort-keys */
+		};
 	}
 	if (!TYPES_SPEC.hasOwnProperty(networkPathId)) return undefined;
 	const latestVersionNumber = TYPES_SPEC[networkPathId].length - 1;
