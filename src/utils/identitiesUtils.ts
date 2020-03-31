@@ -39,7 +39,9 @@ import {
 	defaultMetaData,
 	kusamaMetadata,
 	substrateDevMetadata,
-	westendMetadata
+	westendMetadata,
+	centrifugeAmberMetadata,
+	centrifugeMainnetMetadata
 } from 'constants/networkMetadata';
 
 //walk around to fix the regular expression support for positive look behind;
@@ -355,6 +357,10 @@ export const getMetadata = (networkKey: string): string => {
 			return westendMetadata;
 		case SubstrateNetworkKeys.SUBSTRATE_DEV:
 			return substrateDevMetadata;
+		case SubstrateNetworkKeys.CENTRIFUGE_AMBER:
+			return centrifugeAmberMetadata;
+		case SubstrateNetworkKeys.CENTRIFUGE:
+			return centrifugeMainnetMetadata;
 		default:
 			return defaultMetaData;
 	}
