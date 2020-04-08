@@ -58,7 +58,7 @@ export const SubstrateNetworkKeys: {
 	[key: string]: string;
 } = Object.freeze({
 	CENTRIFUGE:
-		'0x9caf5780c396ac623a42cdb48ee4a40cea9b7e187ed4b3506f8af444c258fb50',
+		'0x67dddf2673b69e5f875f6f25277495834398eafd67f492e09f3f3345e003d1b5',
 	CENTRIFUGE_AMBER:
 		'0x092af6e7d25178ebab1677d15f66e37b30392b44ef442f728a53dd1bf48ec110',
 	EDGEWARE:
@@ -181,7 +181,7 @@ const substrateNetworkBase: {
 		color: '#fcc367',
 		decimals: 18,
 		genesisHash: SubstrateNetworkKeys.CENTRIFUGE,
-		order: 6,
+		order: -100,
 		pathId: 'centrifuge',
 		prefix: 36,
 		title: 'Centrifuge Mainnet',
@@ -192,10 +192,10 @@ const substrateNetworkBase: {
 		color: '#fcc367',
 		decimals: 18,
 		genesisHash: SubstrateNetworkKeys.CENTRIFUGE_AMBER,
-		order: 7,
+		order: -80,
 		pathId: 'centrifuge_amber',
 		prefix: 42,
-		title: 'Centrifuge Amber Testnet',
+		title: 'Centrifuge Testnet Amber',
 		unit: 'ARAD'
 	}
 };
