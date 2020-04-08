@@ -37,7 +37,7 @@ import {
 } from 'types/identityTypes';
 import {
 	centrifugeAmberMetadata,
-	centrifugeMetadata
+	centrifugeMetadata,
 	defaultMetaData,
 	kusamaMetadata,
 	substrateDevMetadata,
