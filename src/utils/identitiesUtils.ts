@@ -36,13 +36,13 @@ import {
 	UnlockedAccount
 } from 'types/identityTypes';
 import {
+	centrifugeAmberMetadata,
+	centrifugeMetadata
 	defaultMetaData,
 	kusamaMetadata,
 	substrateDevMetadata,
 	westendMetadata
 } from 'constants/networkMetadata';
-import centrifugeAmberMetadata from 'constants/centrifugeAmberMetadata';
-import centrifugePreMetadata from 'constants/centrifugePreMetadata';
 
 //walk around to fix the regular expression support for positive look behind;
 export const removeSlash = (str: string): string => str.replace(/\//g, '');
@@ -350,7 +350,7 @@ export const groupPaths = (paths: string[]): PathGroup[] => {
 export const getMetadata = (networkKey: string): string => {
 	switch (networkKey) {
 		case SubstrateNetworkKeys.CENTRIFUGE:
-			return centrifugePreMetadata; // TODO: needs to be updated with mainnet metadata
+			return centrifugeMetadata;
 		case SubstrateNetworkKeys.CENTRIFUGE_AMBER:
 			return centrifugeAmberMetadata;
 		case SubstrateNetworkKeys.KUSAMA:

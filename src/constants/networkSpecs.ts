@@ -58,7 +58,7 @@ export const SubstrateNetworkKeys: {
 	[key: string]: string;
 } = Object.freeze({
 	CENTRIFUGE:
-		'0x9caf5780c396ac623a42cdb48ee4a40cea9b7e187ed4b3506f8af444c258fb50', // https://portal.chain.centrifuge.io/#/explorer/query/0 , TODO: Needs to be replaced after mainnet genesis hash is finalized
+		'0x67dddf2673b69e5f875f6f25277495834398eafd67f492e09f3f3345e003d1b5', // https://portal.chain.centrifuge.io/#/explorer/query/0
 	CENTRIFUGE_AMBER:
 		'0x092af6e7d25178ebab1677d15f66e37b30392b44ef442f728a53dd1bf48ec110', // https://portal.chain.centrifuge.io/#/explorer/query/0
 	EDGEWARE:
